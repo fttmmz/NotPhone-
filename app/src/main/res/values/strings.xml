@@ -69,4 +69,5 @@
         <item>Horizontal by nature. Respect.</item>
         <item>Chaos in human form. Please seek help.</item>
     </string-array>
+    <string name="system_hidden_missing">The secret refused to open.</string>
 </resources>

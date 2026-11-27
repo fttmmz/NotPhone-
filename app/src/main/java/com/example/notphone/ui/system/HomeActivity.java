@@ -2,9 +2,12 @@ package com.example.notphone.ui.system;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -56,6 +59,9 @@ public class HomeActivity extends BaseActivity {
 
         // Setup saved the user's interface choice; pick the matching layout
         nokiaMode = getSharedPreferences("notphone", MODE_PRIVATE).getBoolean("interface_nokia", false);
+        if (nokiaMode) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
         setContentView(nokiaMode ? R.layout.activity_home_nokia : R.layout.activity_home);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -88,8 +94,12 @@ public class HomeActivity extends BaseActivity {
             }
             if (secretTaps >= 7) {
                 secretTaps = 0;
-                GlitchManager.startActivity(this, new Intent(this, HiddenActivity.class));   // explicit intent
-            }
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("notphone://hidden"));
+                try {
+                    GlitchManager.startActivity(this, intent);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(this, R.string.system_hidden_missing, Toast.LENGTH_SHORT).show();
+                }            }
         });
 
         buildAppList();

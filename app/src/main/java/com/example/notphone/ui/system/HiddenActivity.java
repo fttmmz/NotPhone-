@@ -1,6 +1,7 @@
 package com.example.notphone.ui.system;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -50,6 +51,7 @@ public class HiddenActivity extends BaseActivity {
 
         findViewById(R.id.tvHiddenTitle).setOnClickListener(v -> glitchAll());   // tap the title to glitch again
         findViewById(R.id.btnHiddenBack).setOnClickListener(v -> finish());
+        Log.d(TAG, "Opened via: " + getIntent().getData());   // null if opened by the 7-tap, or the link
     }
 
     private void glitchAll() {
