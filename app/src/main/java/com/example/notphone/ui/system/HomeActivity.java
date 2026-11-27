@@ -28,6 +28,7 @@ import java.util.List;
 
 public class HomeActivity extends BaseActivity {
     private TextView tvMood;
+    private TextView tvGreeting;
     private final List<AppEntry> apps = new ArrayList<>();
     private boolean nokiaMode;
 
@@ -47,16 +48,24 @@ public class HomeActivity extends BaseActivity {
         });
 
         String name = getSharedPreferences("notphone", MODE_PRIVATE).getString("username", "friend");
-        ((TextView) findViewById(R.id.tvGreeting)).setText(getString(R.string.system_greeting, name));
+        tvGreeting = findViewById(R.id.tvGreeting);
         tvMood = findViewById(R.id.tvMood);
+
         NotificationHelper.requestPermissionIfNeeded(this);
 
-// TEMPORARY test: tap the mood text to send a test notification (remove later)
+        // TEMPORARY test: tap the mood text to send a test notification (remove later)
         tvMood.setOnClickListener(v ->
                 NotificationHelper.show(this, R.string.system_test_title, R.string.system_test_text));
+        // TEMPORARY: long-press the mood text to cycle moods
+        tvMood.setOnLongClickListener(v -> {
+            MoodManager.setMood(this, (MoodManager.getMood(this) + 1) % 4);
+            applyMood();
+            return true;   // true = "I used up this long-press"
+        });
 
         buildAppList();
         if (nokiaMode) setUpKeypad(); else setUpGrid();
+        applyMood();
     }
 
     private void buildAppList() {
@@ -115,6 +124,7 @@ public class HomeActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         tvMood.setText(getString(R.string.system_mood_label, MoodManager.getName(this)));
+        applyMood();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -160,5 +170,17 @@ public class HomeActivity extends BaseActivity {
                 })
                 .setNegativeButton(R.string.system_cancel, null)
                 .show();
+    }
+    // One colour per mood: Cheerful, Grumpy, Sleepy, Chaotic
+    private static final int[] MOOD_COLORS = {0xFFFFF4C2, 0xFFFFC9C9, 0xFFD6E4FF, 0xFFE8D0FF};
+
+    private void applyMood() {
+        int mood = MoodManager.getMood(this);
+        String name = getSharedPreferences("notphone", MODE_PRIVATE).getString("username", "");
+        String[] greetings = getResources().getStringArray(R.array.system_mood_greetings);
+
+        tvGreeting.setText(String.format(greetings[mood], name));
+        tvMood.setText(getString(R.string.system_mood_label, MoodManager.getName(this)));
+        findViewById(R.id.main).setBackgroundColor(MOOD_COLORS[mood]);
     }
 }

@@ -26,4 +26,10 @@
         <item>Mild</item>
         <item>Unhinged</item>
     </string-array>
+    <string-array name="system_mood_greetings">
+        <item>Hi %1$s! What a wonderful day to open a phone!</item>
+        <item>Oh. It\'s you again, %1$s.</item>
+        <item>%1$s... five more minutes...</item>
+        <item>%1$s?? WHO ARE YOU?? Just kidding. Hi!!</item>
+    </string-array>
 </resources>
