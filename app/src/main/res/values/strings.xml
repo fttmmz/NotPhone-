@@ -33,4 +33,8 @@
         <item>%1$s?? WHO ARE YOU?? Just kidding. Hi!!</item>
     </string-array>
     <string name="system_dodge_hint">Nope. Try again.</string>
+    <string name="system_rename_title">Rename this app</string>
+    <string name="system_rename_hint">New name (empty = original)</string>
+    <string name="system_renamed">Renamed. The app did not consent.</string>
+    <string name="system_restored">Back to its boring original name.</string>
 </resources>

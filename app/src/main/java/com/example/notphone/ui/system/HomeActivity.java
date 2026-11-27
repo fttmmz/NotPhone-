@@ -3,12 +3,14 @@ package com.example.notphone.ui.system;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -37,6 +39,8 @@ public class HomeActivity extends BaseActivity {
     private int lastDodged = -1;   // which icon dodged last time (-1 = none)
     private final List<AppEntry> apps = new ArrayList<>();
     private boolean nokiaMode;
+    private IconAdapter adapter;
+    private static final String LABEL_PREFIX = "label_";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +74,7 @@ public class HomeActivity extends BaseActivity {
         });
 
         buildAppList();
+        loadSavedLabels();
         if (nokiaMode) setUpKeypad(); else setUpGrid();
         applyMood();
     }
@@ -82,7 +87,8 @@ public class HomeActivity extends BaseActivity {
 
     private void setUpGrid() {
         GridView grid = findViewById(R.id.gvApps);
-        grid.setAdapter(new IconAdapter(this, apps));
+        adapter = new IconAdapter(this, apps);
+        grid.setAdapter(adapter);
         grid.setOnItemClickListener((parent, view, position, id) -> {
             if (position != lastDodged && shouldDodge()) {
                 lastDodged = position;                       // this icon dodged, so next tap works
@@ -92,6 +98,10 @@ public class HomeActivity extends BaseActivity {
                 lastDodged = -1;
                 openApp(position);
             }
+        });
+        grid.setOnItemLongClickListener((parent, view, position, id) -> {
+            showRenameDialog(position);
+            return true;   // true = "handled", so the normal tap doesn't also fire
         });
     }
 
@@ -227,5 +237,42 @@ public class HomeActivity extends BaseActivity {
         animator.setRepeatCount(1);                      // play once more...
         animator.setRepeatMode(ValueAnimator.REVERSE);   // ...backwards, so it returns
         animator.start();
+    }
+    private void loadSavedLabels() {
+        SharedPreferences prefs = getSharedPreferences("notphone", MODE_PRIVATE);
+        for (int i = 0; i < apps.size(); i++) {
+            apps.get(i).label = prefs.getString(LABEL_PREFIX + i, apps.get(i).label);
+        }
+    }
+    private String defaultLabel(int position) {
+        int[] res = {R.string.system_app_memory, R.string.system_app_choice, R.string.system_app_time};
+        return getString(res[position]);
+    }
+
+    private void showRenameDialog(int position) {
+        View view = getLayoutInflater().inflate(R.layout.dialog_rename, null);
+        EditText input = view.findViewById(R.id.etRename);
+        input.setText(apps.get(position).label);
+        input.setSelectAllOnFocus(true);
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.system_rename_title)
+                .setView(view)
+                .setPositiveButton(R.string.system_save, (dialog, which) -> {
+                    String text = input.getText().toString().trim();
+                    SharedPreferences prefs = getSharedPreferences("notphone", MODE_PRIVATE);
+                    if (text.isEmpty()) {
+                        prefs.edit().remove(LABEL_PREFIX + position).apply();
+                        apps.get(position).label = defaultLabel(position);
+                        Toast.makeText(this, R.string.system_restored, Toast.LENGTH_SHORT).show();
+                    } else {
+                        prefs.edit().putString(LABEL_PREFIX + position, text).apply();
+                        apps.get(position).label = text;
+                        Toast.makeText(this, R.string.system_renamed, Toast.LENGTH_SHORT).show();
+                    }
+                    adapter.notifyDataSetChanged();   // tells the grid "redraw yourself"
+                })
+                .setNegativeButton(R.string.system_cancel, null)
+                .show();
     }
 }
