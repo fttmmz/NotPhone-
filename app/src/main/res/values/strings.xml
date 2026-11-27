@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">NotPhone</string>
     <string-array name="system_moods">
-        <item>Cheerful</item><item>Grumpy</item><item>Sleepy</item><item>Chaotic</item>
+        <item>Cheerful</item>
+        <item>Grumpy</item>
+        <item>Sleepy</item>
+        <item>Chaotic</item>
     </string-array>
     <string name="system_error_no_name">A phone with no owner? Bold. Type a name.</string>
     <string name="system_greeting">Hello, %1$s</string>
@@ -33,4 +36,38 @@
         <item>%1$s?? WHO ARE YOU?? Just kidding. Hi!!</item>
     </string-array>
     <string name="system_dodge_hint">Nope. Try again.</string>
+    <string name="system_rename_title">Rename this app</string>
+    <string name="system_rename_hint">New name (empty = original)</string>
+    <string name="system_renamed">Renamed. The app did not consent.</string>
+    <string name="system_restored">Back to its boring original name.</string>
+    <string-array name="system_nag_titles">
+        <item>Battery</item>
+        <item>Reminder</item>
+        <item>Phone</item>
+        <item>Health</item>
+        <item>Update</item>
+        <item>Memory</item>
+    </string-array>
+    <string-array name="system_nag_texts">
+        <item>Battery at 1%. It was nice knowing you.</item>
+        <item>You have nothing to do. Suspicious.</item>
+        <item>Are you sure you are the owner of this phone?</item>
+        <item>Time to blink. You are staring too hard.</item>
+        <item>Your phone updated itself to be slightly worse.</item>
+        <item>I remembered something. I will not tell you.</item>
+    </string-array>
+    <string name="system_poke">Stop poking me.</string>
+    <string name="system_hidden_title">Secret Profile</string>
+    <string name="system_hidden_name">Subject: %1$s</string>
+    <string name="system_hidden_chaos">Chaos tolerance: %1$s</string>
+    <string name="system_hidden_stats">Notes written: %1$d\nTasks postponed: %2$d</string>
+    <string name="system_hidden_verdict">Verdict: %1$s</string>
+    <string name="system_hidden_back">Back to pretending</string>
+    <string-array name="system_personalities">
+        <item>Suspiciously optimistic. We are watching you.</item>
+        <item>Professionally annoyed. A natural.</item>
+        <item>Horizontal by nature. Respect.</item>
+        <item>Chaos in human form. Please seek help.</item>
+    </string-array>
+    <string name="system_hidden_missing">The secret refused to open.</string>
 </resources>

@@ -2,13 +2,21 @@ package com.example.notphone.ui.system;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -23,6 +31,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.notphone.R;
 import com.example.notphone.logic.ChaosSettings;
+import com.example.notphone.logic.GlitchManager;
 import com.example.notphone.logic.MoodManager;
 import com.example.notphone.logic.NotificationHelper;
 
@@ -37,6 +46,11 @@ public class HomeActivity extends BaseActivity {
     private int lastDodged = -1;   // which icon dodged last time (-1 = none)
     private final List<AppEntry> apps = new ArrayList<>();
     private boolean nokiaMode;
+    private IconAdapter adapter;
+    private static final String LABEL_PREFIX = "label_";
+    private int secretTaps = 0;
+    private long lastTapTime = 0;
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +59,9 @@ public class HomeActivity extends BaseActivity {
 
         // Setup saved the user's interface choice; pick the matching layout
         nokiaMode = getSharedPreferences("notphone", MODE_PRIVATE).getBoolean("interface_nokia", false);
+        if (nokiaMode) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
         setContentView(nokiaMode ? R.layout.activity_home_nokia : R.layout.activity_home);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -59,17 +76,34 @@ public class HomeActivity extends BaseActivity {
 
         NotificationHelper.requestPermissionIfNeeded(this);
 
-        // TEMPORARY test: tap the mood text to send a test notification (remove later)
-        tvMood.setOnClickListener(v ->
-                NotificationHelper.show(this, R.string.system_test_title, R.string.system_test_text));
+
         // TEMPORARY: long-press the mood text to cycle moods
         tvMood.setOnLongClickListener(v -> {
             MoodManager.setMood(this, (MoodManager.getMood(this) + 1) % 4);
             applyMood();
             return true;   // true = "I used up this long-press"
         });
+        // Secret: tap the greeting 7 times quickly to open the hidden screen
+        tvGreeting.setOnClickListener(v -> {
+            long now = SystemClock.elapsedRealtime();
+            if (now - lastTapTime > 1500) secretTaps = 0;   // too slow, start counting again
+            lastTapTime = now;
+            secretTaps++;
+            if (secretTaps == 4) {
+                Toast.makeText(this, R.string.system_poke, Toast.LENGTH_SHORT).show();   // a hint
+            }
+            if (secretTaps >= 7) {
+                secretTaps = 0;
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("notphone://hidden"));
+                try {
+                    GlitchManager.startActivity(this, intent);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(this, R.string.system_hidden_missing, Toast.LENGTH_SHORT).show();
+                }            }
+        });
 
         buildAppList();
+        loadSavedLabels();
         if (nokiaMode) setUpKeypad(); else setUpGrid();
         applyMood();
     }
@@ -82,7 +116,8 @@ public class HomeActivity extends BaseActivity {
 
     private void setUpGrid() {
         GridView grid = findViewById(R.id.gvApps);
-        grid.setAdapter(new IconAdapter(this, apps));
+        adapter = new IconAdapter(this, apps);
+        grid.setAdapter(adapter);
         grid.setOnItemClickListener((parent, view, position, id) -> {
             if (position != lastDodged && shouldDodge()) {
                 lastDodged = position;                       // this icon dodged, so next tap works
@@ -92,6 +127,10 @@ public class HomeActivity extends BaseActivity {
                 lastDodged = -1;
                 openApp(position);
             }
+        });
+        grid.setOnItemLongClickListener((parent, view, position, id) -> {
+            showRenameDialog(position);
+            return true;   // true = "handled", so the normal tap doesn't also fire
         });
     }
 
@@ -131,7 +170,7 @@ public class HomeActivity extends BaseActivity {
         if (app.target == null) {
             Toast.makeText(this, R.string.system_coming_soon, Toast.LENGTH_SHORT).show();
         } else {
-            startActivity(new Intent(this, app.target));
+            GlitchManager.startActivity(this, new Intent(this, HiddenActivity.class));
         }
     }
 
@@ -140,6 +179,7 @@ public class HomeActivity extends BaseActivity {
         super.onResume();
         tvMood.setText(getString(R.string.system_mood_label, MoodManager.getName(this)));
         applyMood();
+        scheduleNag();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -179,9 +219,11 @@ public class HomeActivity extends BaseActivity {
                 .setView(view)
                 .setPositiveButton(R.string.system_save, (dialog, which) -> {
                     ChaosSettings.setLevel(this, seek.getProgress());
+                    scheduleNag();
                     Toast.makeText(this,
                             getString(R.string.system_chaos_saved, names[seek.getProgress()]),
                             Toast.LENGTH_SHORT).show();
+
                 })
                 .setNegativeButton(R.string.system_cancel, null)
                 .show();
@@ -227,5 +269,69 @@ public class HomeActivity extends BaseActivity {
         animator.setRepeatCount(1);                      // play once more...
         animator.setRepeatMode(ValueAnimator.REVERSE);   // ...backwards, so it returns
         animator.start();
+    }
+    private void loadSavedLabels() {
+        SharedPreferences prefs = getSharedPreferences("notphone", MODE_PRIVATE);
+        for (int i = 0; i < apps.size(); i++) {
+            apps.get(i).label = prefs.getString(LABEL_PREFIX + i, apps.get(i).label);
+        }
+    }
+    private String defaultLabel(int position) {
+        int[] res = {R.string.system_app_memory, R.string.system_app_choice, R.string.system_app_time};
+        return getString(res[position]);
+    }
+
+    private void showRenameDialog(int position) {
+        View view = getLayoutInflater().inflate(R.layout.dialog_rename, null);
+        EditText input = view.findViewById(R.id.etRename);
+        input.setText(apps.get(position).label);
+        input.setSelectAllOnFocus(true);
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.system_rename_title)
+                .setView(view)
+                .setPositiveButton(R.string.system_save, (dialog, which) -> {
+                    String text = input.getText().toString().trim();
+                    SharedPreferences prefs = getSharedPreferences("notphone", MODE_PRIVATE);
+                    if (text.isEmpty()) {
+                        prefs.edit().remove(LABEL_PREFIX + position).apply();
+                        apps.get(position).label = defaultLabel(position);
+                        Toast.makeText(this, R.string.system_restored, Toast.LENGTH_SHORT).show();
+                    } else {
+                        prefs.edit().putString(LABEL_PREFIX + position, text).apply();
+                        apps.get(position).label = text;
+                        Toast.makeText(this, R.string.system_renamed, Toast.LENGTH_SHORT).show();
+                    }
+                    adapter.notifyDataSetChanged();   // tells the grid "redraw yourself"
+                })
+                .setNegativeButton(R.string.system_cancel, null)
+                .show();
+    }
+    private final Runnable nagRunnable = new Runnable() {
+        @Override
+        public void run() {
+            sendNag();
+            scheduleNag();          // schedule the next one, so it repeats
+        }
+    };
+
+    private void scheduleNag() {
+        handler.removeCallbacks(nagRunnable);   // never have two timers at once
+        int chaos = ChaosSettings.getLevel(this);
+        if (chaos == ChaosSettings.OFF) return;
+        long delay = (chaos == ChaosSettings.UNHINGED) ? 10000 : 30000;   // milliseconds
+        handler.postDelayed(nagRunnable, delay);
+    }
+
+    private void sendNag() {
+        String[] titles = getResources().getStringArray(R.array.system_nag_titles);
+        String[] texts = getResources().getStringArray(R.array.system_nag_texts);
+        int i = random.nextInt(titles.length);
+        NotificationHelper.show(this, titles[i], texts[i]);
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(nagRunnable);   // stop the timer when Home is not visible
     }
 }

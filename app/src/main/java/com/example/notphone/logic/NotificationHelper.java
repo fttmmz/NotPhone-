@@ -31,12 +31,15 @@ public final class NotificationHelper {
         }
     }
 
+    // Old version, still works for B and C: pass string resource ids
     public static void show(Context context, int titleRes, int textRes) {
+        show(context, context.getString(titleRes), context.getString(textRes));
+    }
+
+    // New version: pass ready-made strings
+    public static void show(Context context, String title, String text) {
         if (!hasPermission(context)) {
-            // Fallback: an in-app message instead of a real notification
-            Toast.makeText(context,
-                    context.getString(titleRes) + ": " + context.getString(textRes),
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(context, title + ": " + text, Toast.LENGTH_LONG).show();
             return;
         }
         createChannel(context);
@@ -48,19 +51,19 @@ public final class NotificationHelper {
 
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle(context.getString(titleRes))
-                .setContentText(context.getString(textRes))
-                .setAutoCancel(true)            // disappears when tapped
-                .setContentIntent(pending)      // what happens when tapped
+                .setContentTitle(title)
+                .setContentText(text)
+                .setAutoCancel(true)
+                .setContentIntent(pending)
                 .build();
 
         NotificationManager manager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                manager.notify((int) System.currentTimeMillis(), notification);   // unique id so they stack
+        manager.notify((int) System.currentTimeMillis(), notification);
     }
 
     private static boolean hasPermission(Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true;   // Android 12 or older: no pop-up exists
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true;
         return ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 == PackageManager.PERMISSION_GRANTED;
     }
