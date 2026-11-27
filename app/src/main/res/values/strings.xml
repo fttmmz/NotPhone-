@@ -37,4 +37,20 @@
     <string name="system_rename_hint">New name (empty = original)</string>
     <string name="system_renamed">Renamed. The app did not consent.</string>
     <string name="system_restored">Back to its boring original name.</string>
+    <string-array name="system_nag_titles">
+        <item>Battery</item>
+        <item>Reminder</item>
+        <item>Phone</item>
+        <item>Health</item>
+        <item>Update</item>
+        <item>Memory</item>
+    </string-array>
+    <string-array name="system_nag_texts">
+        <item>Battery at 1%. It was nice knowing you.</item>
+        <item>You have nothing to do. Suspicious.</item>
+        <item>Are you sure you are the owner of this phone?</item>
+        <item>Time to blink. You are staring too hard.</item>
+        <item>Your phone updated itself to be slightly worse.</item>
+        <item>I remembered something. I will not tell you.</item>
+    </string-array>
 </resources>

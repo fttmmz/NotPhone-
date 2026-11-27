@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,6 +43,7 @@ public class HomeActivity extends BaseActivity {
     private boolean nokiaMode;
     private IconAdapter adapter;
     private static final String LABEL_PREFIX = "label_";
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,9 +66,7 @@ public class HomeActivity extends BaseActivity {
 
         NotificationHelper.requestPermissionIfNeeded(this);
 
-        // TEMPORARY test: tap the mood text to send a test notification (remove later)
-        tvMood.setOnClickListener(v ->
-                NotificationHelper.show(this, R.string.system_test_title, R.string.system_test_text));
+
         // TEMPORARY: long-press the mood text to cycle moods
         tvMood.setOnLongClickListener(v -> {
             MoodManager.setMood(this, (MoodManager.getMood(this) + 1) % 4);
@@ -150,6 +151,7 @@ public class HomeActivity extends BaseActivity {
         super.onResume();
         tvMood.setText(getString(R.string.system_mood_label, MoodManager.getName(this)));
         applyMood();
+        scheduleNag();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -189,9 +191,11 @@ public class HomeActivity extends BaseActivity {
                 .setView(view)
                 .setPositiveButton(R.string.system_save, (dialog, which) -> {
                     ChaosSettings.setLevel(this, seek.getProgress());
+                    scheduleNag();
                     Toast.makeText(this,
                             getString(R.string.system_chaos_saved, names[seek.getProgress()]),
                             Toast.LENGTH_SHORT).show();
+
                 })
                 .setNegativeButton(R.string.system_cancel, null)
                 .show();
@@ -274,5 +278,32 @@ public class HomeActivity extends BaseActivity {
                 })
                 .setNegativeButton(R.string.system_cancel, null)
                 .show();
+    }
+    private final Runnable nagRunnable = new Runnable() {
+        @Override
+        public void run() {
+            sendNag();
+            scheduleNag();          // schedule the next one, so it repeats
+        }
+    };
+
+    private void scheduleNag() {
+        handler.removeCallbacks(nagRunnable);   // never have two timers at once
+        int chaos = ChaosSettings.getLevel(this);
+        if (chaos == ChaosSettings.OFF) return;
+        long delay = (chaos == ChaosSettings.UNHINGED) ? 10000 : 30000;   // milliseconds
+        handler.postDelayed(nagRunnable, delay);
+    }
+
+    private void sendNag() {
+        String[] titles = getResources().getStringArray(R.array.system_nag_titles);
+        String[] texts = getResources().getStringArray(R.array.system_nag_texts);
+        int i = random.nextInt(titles.length);
+        NotificationHelper.show(this, titles[i], texts[i]);
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(nagRunnable);   // stop the timer when Home is not visible
     }
 }
