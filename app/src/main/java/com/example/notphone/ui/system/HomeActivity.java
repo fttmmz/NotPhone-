@@ -3,19 +3,25 @@ package com.example.notphone.ui.system;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.GridView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.notphone.R;
+import com.example.notphone.logic.ChaosSettings;
 import com.example.notphone.logic.MoodManager;
+import com.example.notphone.logic.NotificationHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +49,11 @@ public class HomeActivity extends BaseActivity {
         String name = getSharedPreferences("notphone", MODE_PRIVATE).getString("username", "friend");
         ((TextView) findViewById(R.id.tvGreeting)).setText(getString(R.string.system_greeting, name));
         tvMood = findViewById(R.id.tvMood);
+        NotificationHelper.requestPermissionIfNeeded(this);
+
+// TEMPORARY test: tap the mood text to send a test notification (remove later)
+        tvMood.setOnClickListener(v ->
+                NotificationHelper.show(this, R.string.system_test_title, R.string.system_test_text));
 
         buildAppList();
         if (nokiaMode) setUpKeypad(); else setUpGrid();
@@ -104,5 +115,50 @@ public class HomeActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         tvMood.setText(getString(R.string.system_mood_label, MoodManager.getName(this)));
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_home, menu);   // turns the XML into real menu items
+        return true;                                          // true = "yes, show the menu"
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_chaos) {
+            showChaosDialog();
+            return true;                                      // true = "I handled this tap"
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showChaosDialog() {
+        View view = getLayoutInflater().inflate(R.layout.dialog_chaos, null);
+        SeekBar seek = view.findViewById(R.id.seekChaos);
+        TextView label = view.findViewById(R.id.tvChaosLabel);
+        String[] names = getResources().getStringArray(R.array.system_chaos_levels);
+
+        seek.setProgress(ChaosSettings.getLevel(this));       // start at the saved level
+        label.setText(names[seek.getProgress()]);
+
+        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar s, int progress, boolean fromUser) {
+                label.setText(names[progress]);               // label follows the slider live
+            }
+            @Override public void onStartTrackingTouch(SeekBar s) {}
+            @Override public void onStopTrackingTouch(SeekBar s) {}
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.system_chaos_title)
+                .setView(view)
+                .setPositiveButton(R.string.system_save, (dialog, which) -> {
+                    ChaosSettings.setLevel(this, seek.getProgress());
+                    Toast.makeText(this,
+                            getString(R.string.system_chaos_saved, names[seek.getProgress()]),
+                            Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(R.string.system_cancel, null)
+                .show();
     }
 }
