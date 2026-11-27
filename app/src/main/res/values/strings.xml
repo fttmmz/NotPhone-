@@ -32,4 +32,5 @@
         <item>%1$s... five more minutes...</item>
         <item>%1$s?? WHO ARE YOU?? Just kidding. Hi!!</item>
     </string-array>
+    <string name="system_dodge_hint">Nope. Try again.</string>
 </resources>
