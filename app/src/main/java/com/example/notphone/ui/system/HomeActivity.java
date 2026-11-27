@@ -1,6 +1,9 @@
 package com.example.notphone.ui.system;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -25,9 +28,13 @@ import com.example.notphone.logic.NotificationHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class HomeActivity extends BaseActivity {
     private TextView tvMood;
+    private TextView tvGreeting;
+    private final Random random = new Random();
+    private int lastDodged = -1;   // which icon dodged last time (-1 = none)
     private final List<AppEntry> apps = new ArrayList<>();
     private boolean nokiaMode;
 
@@ -47,16 +54,24 @@ public class HomeActivity extends BaseActivity {
         });
 
         String name = getSharedPreferences("notphone", MODE_PRIVATE).getString("username", "friend");
-        ((TextView) findViewById(R.id.tvGreeting)).setText(getString(R.string.system_greeting, name));
+        tvGreeting = findViewById(R.id.tvGreeting);
         tvMood = findViewById(R.id.tvMood);
+
         NotificationHelper.requestPermissionIfNeeded(this);
 
-// TEMPORARY test: tap the mood text to send a test notification (remove later)
+        // TEMPORARY test: tap the mood text to send a test notification (remove later)
         tvMood.setOnClickListener(v ->
                 NotificationHelper.show(this, R.string.system_test_title, R.string.system_test_text));
+        // TEMPORARY: long-press the mood text to cycle moods
+        tvMood.setOnLongClickListener(v -> {
+            MoodManager.setMood(this, (MoodManager.getMood(this) + 1) % 4);
+            applyMood();
+            return true;   // true = "I used up this long-press"
+        });
 
         buildAppList();
         if (nokiaMode) setUpKeypad(); else setUpGrid();
+        applyMood();
     }
 
     private void buildAppList() {
@@ -68,7 +83,16 @@ public class HomeActivity extends BaseActivity {
     private void setUpGrid() {
         GridView grid = findViewById(R.id.gvApps);
         grid.setAdapter(new IconAdapter(this, apps));
-        grid.setOnItemClickListener((parent, view, position, id) -> openApp(position));
+        grid.setOnItemClickListener((parent, view, position, id) -> {
+            if (position != lastDodged && shouldDodge()) {
+                lastDodged = position;                       // this icon dodged, so next tap works
+                dodge(view);                                 // "view" is the tapped icon
+                Toast.makeText(this, R.string.system_dodge_hint, Toast.LENGTH_SHORT).show();
+            } else {
+                lastDodged = -1;
+                openApp(position);
+            }
+        });
     }
 
     private void setUpKeypad() {
@@ -115,6 +139,7 @@ public class HomeActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         tvMood.setText(getString(R.string.system_mood_label, MoodManager.getName(this)));
+        applyMood();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -160,5 +185,47 @@ public class HomeActivity extends BaseActivity {
                 })
                 .setNegativeButton(R.string.system_cancel, null)
                 .show();
+    }
+    // One colour per mood: Cheerful, Grumpy, Sleepy, Chaotic
+    private static final int[] MOOD_COLORS = {0xFFFFF4C2, 0xFFFFC9C9, 0xFFD6E4FF, 0xFFE8D0FF};
+
+    private void applyMood() {
+        int mood = MoodManager.getMood(this);
+        String name = getSharedPreferences("notphone", MODE_PRIVATE).getString("username", "");
+        String[] greetings = getResources().getStringArray(R.array.system_mood_greetings);
+
+        tvGreeting.setText(String.format(greetings[mood], name));
+        tvMood.setText(getString(R.string.system_mood_label, MoodManager.getName(this)));
+        int background = MOOD_COLORS[mood];
+        int chaos = ChaosSettings.getLevel(this);
+        if (chaos == ChaosSettings.UNHINGED
+                || (chaos == ChaosSettings.MILD && random.nextInt(100) < 30)) {
+            // random pastel: any hue (0-359), low saturation, full brightness
+            background = Color.HSVToColor(new float[]{random.nextInt(360), 0.25f, 1f});
+        }
+        findViewById(R.id.main).setBackgroundColor(background);
+    }
+    private boolean shouldDodge() {
+        int chaos = ChaosSettings.getLevel(this);
+        int chance = 0;
+        if (chaos == ChaosSettings.MILD) chance = 25;
+        if (chaos == ChaosSettings.UNHINGED) chance = 60;
+        return random.nextInt(100) < chance;
+    }
+
+    private void dodge(View icon) {
+        ObjectAnimator animator;
+        if (random.nextBoolean()) {
+            // slide sideways (left or right, 250 pixels)
+            float dx = random.nextBoolean() ? 250f : -250f;
+            animator = ObjectAnimator.ofFloat(icon, "translationX", 0f, dx);
+        } else {
+            // blink out
+            animator = ObjectAnimator.ofFloat(icon, "alpha", 1f, 0f);
+        }
+        animator.setDuration(250);
+        animator.setRepeatCount(1);                      // play once more...
+        animator.setRepeatMode(ValueAnimator.REVERSE);   // ...backwards, so it returns
+        animator.start();
     }
 }
