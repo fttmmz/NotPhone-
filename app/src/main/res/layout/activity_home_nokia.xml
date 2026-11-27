@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="16dp">
+
+    <TextView android:id="@+id/tvGreeting" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:textSize="24sp"/>
+    <TextView android:id="@+id/tvMood" android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" android:padding="12dp" android:background="#C5E1A5"
+        android:fontFamily="monospace" android:textSize="22sp"
+        android:text="@string/system_nokia_menu"/>
+
+    <TableLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" android:stretchColumns="*">
+        <TableRow>
+            <Button android:id="@+id/key1" style="@style/NokiaKey" android:text="1"/>
+            <Button android:id="@+id/key2" style="@style/NokiaKey" android:text="2"/>
+            <Button android:id="@+id/key3" style="@style/NokiaKey" android:text="3"/>
+        </TableRow>
+        <TableRow>
+            <Button android:id="@+id/key4" style="@style/NokiaKey" android:text="4"/>
+            <Button android:id="@+id/key5" style="@style/NokiaKey" android:text="5"/>
+            <Button android:id="@+id/key6" style="@style/NokiaKey" android:text="6"/>
+        </TableRow>
+        <TableRow>
+            <Button android:id="@+id/key7" style="@style/NokiaKey" android:text="7"/>
+            <Button android:id="@+id/key8" style="@style/NokiaKey" android:text="8"/>
+            <Button android:id="@+id/key9" style="@style/NokiaKey" android:text="9"/>
+        </TableRow>
+        <TableRow>
+            <Button android:id="@+id/keyStar" style="@style/NokiaKey" android:text="*"/>
+            <Button android:id="@+id/key0" style="@style/NokiaKey" android:text="0"/>
+            <Button android:id="@+id/keyHash" style="@style/NokiaKey" android:text="#"/>
+        </TableRow>
+    </TableLayout>
+</LinearLayout>

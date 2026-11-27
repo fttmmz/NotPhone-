@@ -14,4 +14,5 @@ public final class Keys {
     public static final int REQ_PROOF      = 101;
     public static final int REQ_ALARM      = 102;
     public static final int REQ_PREP_TASKS = 103;
+    public static final int REQ_NOTIFICATIONS = 104;
 }

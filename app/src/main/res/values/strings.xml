@@ -10,4 +10,20 @@
     <string name="system_app_choice">CHOICE</string>
     <string name="system_app_time">TIME</string>
     <string name="system_coming_soon">Not built yet</string>
+    <string name="system_nokia_menu">1  MEMORY\n2  CHOICE\n3  TIME</string>
+    <string name="system_key_empty">Key %1$d: nothing here. Very Nokia.</string>
+    <string name="system_key_symbol">That key is only for decoration.</string>
+    <string name="system_channel_name">NotPhone messages</string>
+    <string name="system_test_title">NotPhone</string>
+    <string name="system_test_text">Your phone has opinions about you.</string>
+    <string name="system_menu_chaos">Chaos Level</string>
+    <string name="system_chaos_title">How chaotic should your phone be?</string>
+    <string name="system_chaos_saved">Chaos set to: %1$s</string>
+    <string name="system_save">Save</string>
+    <string name="system_cancel">Cancel</string>
+    <string-array name="system_chaos_levels">
+        <item>Off (boring and safe)</item>
+        <item>Mild</item>
+        <item>Unhinged</item>
+    </string-array>
 </resources>
