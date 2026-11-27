@@ -109,9 +109,9 @@ public class HomeActivity extends BaseActivity {
     }
 
     private void buildAppList() {
-        apps.add(new AppEntry(getString(R.string.system_app_memory), android.R.drawable.ic_menu_edit, null));
-        apps.add(new AppEntry(getString(R.string.system_app_choice), android.R.drawable.ic_menu_agenda, null));
-        apps.add(new AppEntry(getString(R.string.system_app_time), android.R.drawable.ic_menu_my_calendar, null));
+        apps.add(new AppEntry(getString(R.string.system_app_memory), android.R.drawable.ic_menu_edit, NotesActivity.class));
+        apps.add(new AppEntry(getString(R.string.system_app_choice), android.R.drawable.ic_menu_agenda, TaskListActivity.class));
+        apps.add(new AppEntry(getString(R.string.system_app_time), android.R.drawable.ic_menu_my_calendar, CalendarActivity.class));
     }
 
     private void setUpGrid() {
