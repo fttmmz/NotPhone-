@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">NotPhone</string>
     <string-array name="system_moods">
-        <item>Cheerful</item><item>Grumpy</item><item>Sleepy</item><item>Chaotic</item>
+        <item>Cheerful</item>
+        <item>Grumpy</item>
+        <item>Sleepy</item>
+        <item>Chaotic</item>
     </string-array>
     <string name="system_error_no_name">A phone with no owner? Bold. Type a name.</string>
     <string name="system_greeting">Hello, %1$s</string>
@@ -52,5 +55,18 @@
         <item>Time to blink. You are staring too hard.</item>
         <item>Your phone updated itself to be slightly worse.</item>
         <item>I remembered something. I will not tell you.</item>
+    </string-array>
+    <string name="system_poke">Stop poking me.</string>
+    <string name="system_hidden_title">Secret Profile</string>
+    <string name="system_hidden_name">Subject: %1$s</string>
+    <string name="system_hidden_chaos">Chaos tolerance: %1$s</string>
+    <string name="system_hidden_stats">Notes written: %1$d\nTasks postponed: %2$d</string>
+    <string name="system_hidden_verdict">Verdict: %1$s</string>
+    <string name="system_hidden_back">Back to pretending</string>
+    <string-array name="system_personalities">
+        <item>Suspiciously optimistic. We are watching you.</item>
+        <item>Professionally annoyed. A natural.</item>
+        <item>Horizontal by nature. Respect.</item>
+        <item>Chaos in human form. Please seek help.</item>
     </string-array>
 </resources>

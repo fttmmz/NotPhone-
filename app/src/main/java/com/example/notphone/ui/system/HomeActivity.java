@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +28,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.notphone.R;
 import com.example.notphone.logic.ChaosSettings;
+import com.example.notphone.logic.GlitchManager;
 import com.example.notphone.logic.MoodManager;
 import com.example.notphone.logic.NotificationHelper;
 
@@ -43,6 +45,8 @@ public class HomeActivity extends BaseActivity {
     private boolean nokiaMode;
     private IconAdapter adapter;
     private static final String LABEL_PREFIX = "label_";
+    private int secretTaps = 0;
+    private long lastTapTime = 0;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
@@ -72,6 +76,20 @@ public class HomeActivity extends BaseActivity {
             MoodManager.setMood(this, (MoodManager.getMood(this) + 1) % 4);
             applyMood();
             return true;   // true = "I used up this long-press"
+        });
+        // Secret: tap the greeting 7 times quickly to open the hidden screen
+        tvGreeting.setOnClickListener(v -> {
+            long now = SystemClock.elapsedRealtime();
+            if (now - lastTapTime > 1500) secretTaps = 0;   // too slow, start counting again
+            lastTapTime = now;
+            secretTaps++;
+            if (secretTaps == 4) {
+                Toast.makeText(this, R.string.system_poke, Toast.LENGTH_SHORT).show();   // a hint
+            }
+            if (secretTaps >= 7) {
+                secretTaps = 0;
+                GlitchManager.startActivity(this, new Intent(this, HiddenActivity.class));   // explicit intent
+            }
         });
 
         buildAppList();
@@ -142,7 +160,7 @@ public class HomeActivity extends BaseActivity {
         if (app.target == null) {
             Toast.makeText(this, R.string.system_coming_soon, Toast.LENGTH_SHORT).show();
         } else {
-            startActivity(new Intent(this, app.target));
+            GlitchManager.startActivity(this, new Intent(this, HiddenActivity.class));
         }
     }
 

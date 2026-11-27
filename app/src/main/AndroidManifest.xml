@@ -27,6 +27,8 @@
             android:name=".ui.system.HomeActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <activity android:name=".ui.system.HiddenActivity" android:exported="false" />
     </application>
 
 </manifest>
