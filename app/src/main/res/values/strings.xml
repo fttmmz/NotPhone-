@@ -4,5 +4,10 @@
         <item>Cheerful</item><item>Grumpy</item><item>Sleepy</item><item>Chaotic</item>
     </string-array>
     <string name="system_error_no_name">A phone with no owner? Bold. Type a name.</string>
-
+    <string name="system_greeting">Hello, %1$s</string>
+    <string name="system_mood_label">Mood: %1$s</string>
+    <string name="system_app_memory">MEMORY</string>
+    <string name="system_app_choice">CHOICE</string>
+    <string name="system_app_time">TIME</string>
+    <string name="system_coming_soon">Not built yet</string>
 </resources>

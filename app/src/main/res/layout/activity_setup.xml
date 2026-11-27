@@ -28,13 +28,15 @@
                     android:id="@+id/rbNokia"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Nokia" />
+                    android:text="Nokia"
+                    />
 
                 <RadioButton
                     android:id="@+id/rbAndroid"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Android" />
+                    android:text="Android"
+                    android:checked="true"/>
 
             </RadioGroup>
 
